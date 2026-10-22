@@ -31,6 +31,10 @@ function page(title, body) {
 </html>`;
 }
 
+app.get("/api/cartas", (req, res) => {
+  res.json(cards);
+});
+
 app.get("/", (req, res) => {
   res.send(page(
     "A minha coleção",
@@ -41,7 +45,7 @@ app.get("/", (req, res) => {
 app.get("/sobre", (req, res) => {
   res.send(page(
     "Sobre",
-    `<p>Feito por <b>&lt;nome do aluno&gt;</b>, turma &lt;turma&gt;.</p>`
+    `<p>Feito por <b>&lt;Yami Araújo&gt;</b>, turma &lt;TGPSI24U&gt;.</p>`
   ));
 });
 
