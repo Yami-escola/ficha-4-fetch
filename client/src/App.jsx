@@ -7,23 +7,14 @@ function App() {
   const [randomCard, setRandomCard] = useState(null);
   const [sorted, setSorted] = useState(false);
   const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  fetch("http://localhost:3000/api/cartas")
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      return res.json();
-    })
-    .then((data) => {
-      console.log("Cartas recebidas:", data);
-      setCards(data);
-    })
-    .catch((err) => {
-      console.error("Erro ao buscar cartas:", err);
-    });
-}, []);
+    fetch("http://localhost:3000/api/cartas")
+      .then((res) => res.json())
+      .then((data) => setCards(data))
+      .finally(() => setLoading(false));
+  }, []);
 
   let visible = cards
     .filter((card) => filter === "Todas" || card.type === filter)
@@ -35,6 +26,10 @@ function App() {
 
   function pickRandom() {
     setRandomCard(cards[Math.floor(Math.random() * cards.length)]);
+  }
+
+  if (loading) {
+    return <p>A carregar…</p>;
   }
 
   return (
