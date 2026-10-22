@@ -8,11 +8,18 @@ function App() {
   const [sorted, setSorted] = useState(false);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:3000/api/cartas")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => setCards(data))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -30,6 +37,9 @@ function App() {
 
   if (loading) {
     return <p>A carregar…</p>;
+  }
+  if (error) {
+    return <p>Erro: {error}</p>;
   }
 
   return (

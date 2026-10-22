@@ -88,3 +88,8 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Server a correr em http://localhost:${PORT}`);
 });
+
+app.use((req, res) => {
+  res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.status(404).send("Not Found");
+});
