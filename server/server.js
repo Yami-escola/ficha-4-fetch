@@ -1,20 +1,25 @@
 const express = require("express");
-const cors = require("cors");               // <-- novo
+const cors = require("cors");
+const fs = require("fs"); // <-- Importar o módulo File System
 
 const app = express();
 const PORT = 3000;
 
-// ---- middlewares (antes das rotas!) ----
-app.use(cors({ origin: "http://localhost:5173" }));  // trata do CORS + OPTIONS
-app.use(express.json());                              // lê o body JSON -> req.body
+// ---- middlewares ----
+app.use(cors({ origin: "http://localhost:5173" }));
+app.use(express.json());
 
-const cards = [
-  { name: "Dragão de Cobalto", type: "Criatura", attack: 7, defense: 5 },
-  { name: "Guardiã das Marés", type: "Criatura", attack: 4, defense: 8 },
-  { name: "Rito de Ferro", type: "Feitiço", attack: 0, defense: 0 },
-  { name: "Sentinela de Âmbar", type: "Criatura", attack: 6, defense: 6 },
-  { name: "Eco do Vazio", type: "Feitiço", attack: 0, defense: 0 },
-];
+// ---- Ler o ficheiro ao arrancar ----
+const caminhoFicheiro = "./cartas.json";
+let cards = [];
+
+try {
+  const dados = fs.readFileSync(caminhoFicheiro, "utf-8");
+  cards = JSON.parse(dados); // Converte o texto em array de objetos
+} catch (err) {
+  console.error("Erro ao ler o ficheiro cartas.json:", err.message);
+  // Se o ficheiro não existir, começa com um array vazio para não crashar
+}
 
 function page(title, body) {
   return `<!DOCTYPE html>
@@ -38,7 +43,6 @@ function page(title, body) {
 
 // ---- API ----
 app.get("/api/cartas", (req, res) => {
-  // res.set("Access-Control-Allow-Origin", ...)  <-- APAGADO (o cors trata disto)
   res.json(cards);
 });
 
@@ -54,7 +58,15 @@ app.post("/api/cartas", (req, res) => {
 
   cards.push(card);
 
-  res.status(201).json(card);   // devolve a carta criada
+  // ---- Gravar no ficheiro a cada POST ----
+  try {
+    // O 'null, 2' serve para formatar o JSON com indentação bonita no ficheiro
+    fs.writeFileSync(caminhoFicheiro, JSON.stringify(cards, null, 2));
+  } catch (err) {
+    console.error("Erro ao gravar o ficheiro cartas.json:", err.message);
+  }
+
+  res.status(201).json(card); // devolve a carta criada
 });
 
 // ---- páginas HTML ----
