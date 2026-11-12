@@ -10,6 +10,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // estado do formulário (tarefa 1)
+  const [name, setName] = useState("");
+  const [type, setType] = useState("Criatura");
+  const [attack, setAttack] = useState("");
+
   useEffect(() => {
     fetch("http://localhost:3000/api/cartas")
       .then((res) => {
@@ -22,6 +27,22 @@ function App() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  function handleSubmit(e) {
+    e.preventDefault(); // <- sem isto a página recarrega
+    if (!name.trim()) return;
+
+    const card = {
+      name: name.trim(),
+      type,
+      attack: Number(attack) || 0,
+    };
+
+    setCards([...cards, card]); // acrescenta sem recarregar
+    setName("");
+    setType("Criatura");
+    setAttack("");
+  }
 
   let visible = cards
     .filter((card) => filter === "Todas" || card.type === filter)
@@ -49,6 +70,27 @@ function App() {
       <p>
         Tenho {cards.length} cartas · a mostrar {visible.length}
       </p>
+
+      {/* ===== Formulário de nova carta ===== */}
+      <h2>Nova carta</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nome da carta"
+        />
+        <select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="Criatura">Criatura</option>
+          <option value="Feitiço">Feitiço</option>
+        </select>
+        <input
+          type="number"
+          value={attack}
+          onChange={(e) => setAttack(e.target.value)}
+          placeholder="Ataque"
+        />
+        <button type="submit">Adicionar carta</button>
+      </form>
 
       <div>
         <button onClick={() => setFilter("Todas")}>Todas</button>
