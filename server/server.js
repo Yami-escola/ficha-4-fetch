@@ -1,7 +1,12 @@
 const express = require("express");
+const cors = require("cors");               // <-- novo
 
 const app = express();
 const PORT = 3000;
+
+// ---- middlewares (antes das rotas!) ----
+app.use(cors({ origin: "http://localhost:5173" }));  // trata do CORS + OPTIONS
+app.use(express.json());                              // lê o body JSON -> req.body
 
 const cards = [
   { name: "Dragão de Cobalto", type: "Criatura", attack: 7, defense: 5 },
@@ -31,11 +36,28 @@ function page(title, body) {
 </html>`;
 }
 
+// ---- API ----
 app.get("/api/cartas", (req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+  // res.set("Access-Control-Allow-Origin", ...)  <-- APAGADO (o cors trata disto)
   res.json(cards);
 });
 
+app.post("/api/cartas", (req, res) => {
+  const { name, type, attack, defense } = req.body;
+
+  const card = {
+    name,
+    type,
+    attack: Number(attack) || 0,
+    defense: Number(defense) || 0,
+  };
+
+  cards.push(card);
+
+  res.status(201).json(card);   // devolve a carta criada
+});
+
+// ---- páginas HTML ----
 app.get("/", (req, res) => {
   res.send(page(
     "A minha coleção",
@@ -77,6 +99,7 @@ app.get("/agora", (req, res) => {
   res.send(page("Agora", `<p>Este pedido foi respondido às <b>${now}</b>.</p>`));
 });
 
+// ---- 404 (por último) ----
 app.use((req, res) => {
   res.status(404).send(page(
     "404 — não encontrado",
@@ -87,9 +110,4 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server a correr em http://localhost:${PORT}`);
-});
-
-app.use((req, res) => {
-  res.set("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.status(404).send("Not Found");
 });
