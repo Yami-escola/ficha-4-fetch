@@ -1,24 +1,21 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs"); // <-- Importar o módulo File System
+const fs = require("fs");
 
 const app = express();
 const PORT = 3000;
 
-// ---- middlewares ----
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-// ---- Ler o ficheiro ao arrancar ----
 const caminhoFicheiro = "./cartas.json";
 let cards = [];
 
 try {
   const dados = fs.readFileSync(caminhoFicheiro, "utf-8");
-  cards = JSON.parse(dados); // Converte o texto em array de objetos
+  cards = JSON.parse(dados);
 } catch (err) {
   console.error("Erro ao ler o ficheiro cartas.json:", err.message);
-  // Se o ficheiro não existir, começa com um array vazio para não crashar
 }
 
 function page(title, body) {
@@ -41,13 +38,16 @@ function page(title, body) {
 </html>`;
 }
 
-// ---- API ----
 app.get("/api/cartas", (req, res) => {
   res.json(cards);
 });
 
 app.post("/api/cartas", (req, res) => {
   const { name, type, attack, defense } = req.body;
+
+  if (!name || !type) {
+    return res.status(400).json({ error: "A carta precisa de nome e tipo." });
+  }
 
   const card = {
     name,
@@ -58,18 +58,15 @@ app.post("/api/cartas", (req, res) => {
 
   cards.push(card);
 
-  // ---- Gravar no ficheiro a cada POST ----
   try {
-    // O 'null, 2' serve para formatar o JSON com indentação bonita no ficheiro
     fs.writeFileSync(caminhoFicheiro, JSON.stringify(cards, null, 2));
   } catch (err) {
     console.error("Erro ao gravar o ficheiro cartas.json:", err.message);
   }
 
-  res.status(201).json(card); // devolve a carta criada
+  res.status(201).json(card);
 });
 
-// ---- páginas HTML ----
 app.get("/", (req, res) => {
   res.send(page(
     "A minha coleção",
@@ -94,6 +91,8 @@ app.get("/cartas", (req, res) => {
 
 app.get("/cartas/aleatoria", (req, res) => {
   const card = cards[Math.floor(Math.random() * cards.length)];
+  
+  if (!card) return res.send(page("Carta à sorte", "<p>Não há cartas.</p>"));
 
   res.send(page(
     "Carta à sorte",
@@ -111,7 +110,6 @@ app.get("/agora", (req, res) => {
   res.send(page("Agora", `<p>Este pedido foi respondido às <b>${now}</b>.</p>`));
 });
 
-// ---- 404 (por último) ----
 app.use((req, res) => {
   res.status(404).send(page(
     "404 — não encontrado",
